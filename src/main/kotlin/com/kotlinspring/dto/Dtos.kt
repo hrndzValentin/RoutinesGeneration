@@ -1,12 +1,13 @@
 package com.kotlinspring.dto
 
 import com.kotlinspring.entity.Persona
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 
 data class ChatGPTRequest(
     var model: String,
     var messages: MutableList<Message>
 ){
-
 
     constructor(model: String, prompt: String) : this(model, mutableListOf()) {
         messages.add(Message(prompt,"user"))
@@ -30,6 +31,19 @@ data class Choice(
 data class DalleRequest(
     val prompt: String
 )
+
+data class PersonaDTO(@NotBlank(message = "El nombre no puede estar en blanco")
+                      val nombre: String = "",
+                      @NotNull(message = "El campo no puede ser nulo")
+                      val edad: Int = 0,
+                      @NotNull(message = "El campo no puede ser nulo")
+                      val peso: Float = 0f,
+                      @NotNull(message = "El campo no puede ser nulo")
+                      val altura: Float = 0f,
+                      @NotNull(message = "El campo no puede ser nulo")
+                      val proposito: String = ""){
+
+}
 
 data class DalleResponse(
     val data: List<images>

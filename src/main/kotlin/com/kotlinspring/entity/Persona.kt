@@ -1,9 +1,11 @@
 package com.kotlinspring.entity
 
+import com.kotlinspring.dto.Message
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import lombok.AllArgsConstructor
 import lombok.Data
@@ -23,7 +25,9 @@ class Persona (@Id
                val peso: Float = 0f,
                val altura: Float = 0f,
                val proposito: String = "",
+               var images : MutableList<String>,
+               @OneToMany(mappedBy = "persona")
+               var routine: MutableList<Routine>
 
     ){
-
 }

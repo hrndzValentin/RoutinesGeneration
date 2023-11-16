@@ -2,12 +2,14 @@ package com.kotlinspring.controller
 
 import com.kotlinspring.dto.*
 import com.kotlinspring.entity.Persona
+import com.kotlinspring.service.PersonaService
+import com.kotlinspring.service.RoutineService
+import jakarta.validation.Valid
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.ResponseEntity
+import org.springframework.validation.BindingResult
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.RestTemplate
 
 @RequestMapping("/bot")
@@ -15,7 +17,9 @@ import org.springframework.web.client.RestTemplate
 class routine(private val restTemplate: RestTemplate,
               @Value("\${openai.model}") var model: String,
               @Value("\${openai.api.url}") var url: String,
-              @Value("\${openai.api.dalle.url}") var dalle_url:String) {
+              @Value("\${openai.api.dalle.url}") var dalle_url:String,
+              @Autowired val personaService: PersonaService,
+              @Autowired val routineService: RoutineService) {
 
 
     @GetMapping("/chat")
@@ -54,6 +58,16 @@ class routine(private val restTemplate: RestTemplate,
             return response.data.get(0).url
         }
         return "No responses from Dalle 2.0"
+
+    }
+
+    @PostMapping("/create")
+    fun createPersona(@Valid @RequestBody persona: PersonaDTO, bindingResult: BindingResult): ResponseEntity<String>{
+        if (bindingResult.hasErrors()) {
+            val errorMessage = StringBuilder("Errores de validación:\n")
+            bindingResult.fieldErrors.forEach { error -> errorMessage.append(error.defaultMessage).append("\n") }
+            return ResponseEntity.badRequest().body(errorMessage.toString())
+        }
 
     }
 
