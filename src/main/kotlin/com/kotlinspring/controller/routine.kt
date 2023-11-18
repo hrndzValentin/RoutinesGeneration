@@ -7,10 +7,13 @@ import com.kotlinspring.service.RoutineService
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.RestTemplate
+import kotlin.reflect.KProperty1
 
 @RequestMapping("/bot")
 @RestController
@@ -23,9 +26,9 @@ class routine(private val restTemplate: RestTemplate,
 
 
     @GetMapping("/chat")
-    fun getRoutine(@RequestParam prompt : String): String{
+    fun getRoutine(@RequestParam prompt: String): String {
         var request = ChatGPTRequest(model, prompt)
-        var response = restTemplate.postForObject(url,request,ChatGPTResponse::class.java)
+        var response = restTemplate.postForObject(url, request, ChatGPTResponse::class.java)
 
 
         if (response != null) {
@@ -34,11 +37,9 @@ class routine(private val restTemplate: RestTemplate,
         return "No responses from chatGPT"
 
     }
-
-    @GetMapping("/chat/prompt")
-        fun getRoutinePersonalized(@RequestBody persona: Persona): String{
+    fun getRoutinePersonalized(persona: PersonaDTO): String {
         var request = ChatGPTRequest(model, promptCreator(persona))
-        var response = restTemplate.postForObject(url,request,ChatGPTResponse::class.java)
+        var response = restTemplate.postForObject(url, request, ChatGPTResponse::class.java)
 
 
         if (response != null) {
@@ -48,27 +49,34 @@ class routine(private val restTemplate: RestTemplate,
 
     }
 
-    @GetMapping("/images")
-    fun getImage(@RequestParam prompt : String): String{
-        var request = DalleRequest(prompt)
-        var response = restTemplate.postForObject(dalle_url,request,DalleResponse::class.java)
-
-
-        if (response != null) {
-            return response.data.get(0).url
+    fun getImage(prompt: MutableList<String>): MutableList<String> {
+        var images: MutableList<String> = mutableListOf()
+        for (i in prompt){
+            var request = DalleRequest(i)
+            var response = restTemplate.postForObject(dalle_url, request, DalleResponse::class.java)
+            if (response != null) {
+                images.add(response.data.get(0).url)
+            }
         }
-        return "No responses from Dalle 2.0"
+
+        return images
 
     }
+
 
     @PostMapping("/create")
-    fun createPersona(@Valid @RequestBody persona: PersonaDTO, bindingResult: BindingResult): ResponseEntity<String>{
+    fun createPersona(@Valid @RequestBody persona: PersonaDTO, bindingResult: BindingResult): ResponseEntity<MutableList<String>>{
         if (bindingResult.hasErrors()) {
             val errorMessage = StringBuilder("Errores de validación:\n")
             bindingResult.fieldErrors.forEach { error -> errorMessage.append(error.defaultMessage).append("\n") }
-            return ResponseEntity.badRequest().body(errorMessage.toString())
+            return ResponseEntity.badRequest().body(mutableListOf(errorMessage.toString()))
         }
 
+        var json: String = this.getRoutinePersonalized(persona)
+
+        var schedule: RoutinesDTO =  messageMapper(json)
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(getImage(imagesPrompts(schedule.Lunes)))
     }
 
 
