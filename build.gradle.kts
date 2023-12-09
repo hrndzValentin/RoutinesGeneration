@@ -38,7 +38,9 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+	implementation("com.google.code.gson:gson:2.8.8")
 
 }
 
